@@ -25,14 +25,110 @@ const SERVICES_OPTIONS = [
   { id: 'combo',      icon: '🔗', label: 'Full AI Stack' },
 ]
 
-const BUDGET_OPTIONS = ['< $1k', '$1k – $5k', '$5k – $15k', '$15k – $50k', '$50k+', "Let's discuss"]
-const TIMELINE_OPTIONS = ['ASAP', '1 month', '2 – 3 months', '3 – 6 months', 'Flexible']
+const BUDGET_OPTIONS = ['< $1k', '$1k – $3k', '$3k – $5k', "Let's discuss"]
+const TIMELINE_OPTIONS = ['ASAP', '1 week', '2 weeks', '3 weeks', 'Flexible']
 
 /* ── Validation helpers ─────────────────────────────────────── */
 const isValidEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
-const isValidPhone = (v: string) => v.replace(/[\s\-+()\d]/g, '').length === 0 && v.replace(/\D/g, '').length >= 7
+const isValidPhone = (v: string) =>
+  v.replace(/[\s\-+()\d]/g, '').length === 0 && v.replace(/\D/g, '').length >= 7
+
+/* ── Sub-components defined OUTSIDE main component ──────────────
+   Defining them inside causes React to treat them as new component
+   types on every render, which unmounts/remounts inputs and loses focus.
+─────────────────────────────────────────────────────────────── */
+interface FieldProps {
+  id: keyof FormData
+  label: string
+  type?: string
+  placeholder: string
+  value: string
+  err?: string
+  isTouched: boolean
+  onChange: (id: keyof FormData, value: string) => void
+  onBlur: (id: keyof FormData) => void
+}
+
+function Field({ id, label, type = 'text', placeholder, value, err, isTouched, onChange, onBlur }: FieldProps) {
+  return (
+    <div className="flex flex-col gap-1">
+      <label className="text-[11px] font-mono tracking-widest text-slate-500 uppercase">
+        {label} *
+      </label>
+      <input
+        type={type}
+        value={value}
+        placeholder={placeholder}
+        onChange={(e) => onChange(id, e.target.value)}
+        onBlur={() => onBlur(id)}
+        className={`bg-[#0a1628] border rounded-lg px-4 py-2.5 text-sm text-slate-200 placeholder-slate-600
+          outline-none transition-all focus:ring-1 ${
+            isTouched && err
+              ? 'border-red-500/60 focus:ring-red-500/40'
+              : 'border-[rgba(34,211,238,0.2)] focus:border-[#22d3ee] focus:ring-[#22d3ee]/20'
+          }`}
+      />
+      {isTouched && err && (
+        <p className="text-xs text-red-400 mt-0.5">{err}</p>
+      )}
+    </div>
+  )
+}
+
+function Chip({ label, selected, onClick }: { label: string; selected: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+        selected
+          ? 'bg-[rgba(34,211,238,0.15)] border-[#22d3ee] text-[#22d3ee]'
+          : 'bg-[rgba(255,255,255,0.03)] border-[rgba(255,255,255,0.1)] text-slate-400 hover:border-[rgba(34,211,238,0.4)] hover:text-slate-200'
+      }`}
+    >
+      {label}
+    </button>
+  )
+}
+
+function Progress({ current }: { current: 1 | 2 | 3 }) {
+  return (
+    <div className="flex items-center gap-2 mb-5">
+      {[1, 2, 3].map((n) => (
+        <div key={n} className="flex items-center gap-2 flex-1">
+          <div
+            className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-all ${
+              n < current
+                ? 'bg-gradient-to-br from-[#22d3ee] to-[#a855f7] text-white'
+                : n === current
+                ? 'border-2 border-[#22d3ee] text-[#22d3ee]'
+                : 'border border-[rgba(255,255,255,0.1)] text-slate-600'
+            }`}
+          >
+            {n < current ? '✓' : n}
+          </div>
+          {n < 3 && (
+            <div
+              className={`h-0.5 flex-1 rounded-full transition-all ${
+                n < current
+                  ? 'bg-gradient-to-r from-[#22d3ee] to-[#a855f7]'
+                  : 'bg-[rgba(255,255,255,0.08)]'
+              }`}
+            />
+          )}
+        </div>
+      ))}
+    </div>
+  )
+}
 
 /* ── Main Component ─────────────────────────────────────────── */
+const STEP_TITLES: Record<string, string> = {
+  '1': 'Your Details',
+  '2': 'Project Scope',
+  '3': 'Describe Your Vision',
+}
+
 export default function ContactWidget() {
   const { isOpen, openWidget, closeWidget } = useContactWidget()
   const [step, setStep] = useState<Step>(1)
@@ -44,33 +140,28 @@ export default function ContactWidget() {
   })
   const [touched, setTouched] = useState<Partial<Record<keyof FormData, boolean>>>({})
 
-  const update = (field: keyof FormData, value: string | string[]) =>
-    setForm((f) => ({ ...f, [field]: value }))
+  const update = useCallback((field: keyof FormData, value: string | string[]) =>
+    setForm((f) => ({ ...f, [field]: value })), [])
 
-  const touch = (field: keyof FormData) =>
-    setTouched((t) => ({ ...t, [field]: true }))
+  const touch = useCallback((field: keyof FormData) =>
+    setTouched((t) => ({ ...t, [field]: true })), [])
 
-  const toggleService = (id: string) => {
+  const toggleService = (id: string) =>
     setForm((f) => ({
       ...f,
       services: f.services.includes(id)
         ? f.services.filter((s) => s !== id)
         : [...f.services, id],
     }))
-  }
 
-  /* ── Step 1 validation ─────────────────────────────────────── */
+  /* ── Validation ────────────────────────────────────────────── */
   const s1Errors = {
-    name:  form.name.trim().length < 2     ? 'Please enter your full name'   : '',
-    email: !isValidEmail(form.email)       ? 'Enter a valid email address'   : '',
-    phone: !isValidPhone(form.phone)       ? 'Enter a valid phone number'    : '',
+    name:  form.name.trim().length < 2  ? 'Please enter your full name' : '',
+    email: !isValidEmail(form.email)    ? 'Enter a valid email address' : '',
+    phone: !isValidPhone(form.phone)    ? 'Enter a valid phone number'  : '',
   }
   const step1Valid = !s1Errors.name && !s1Errors.email && !s1Errors.phone
-
-  /* ── Step 2 validation ─────────────────────────────────────── */
   const step2Valid = form.services.length > 0 && !!form.budget && !!form.timeline
-
-  /* ── Step 3 validation ─────────────────────────────────────── */
   const step3Valid = form.description.trim().length >= 20
 
   /* ── Submit ────────────────────────────────────────────────── */
@@ -105,72 +196,6 @@ export default function ContactWidget() {
       setTouched({})
       setError('')
     }, 400)
-  }
-
-  /* ── Field component ───────────────────────────────────────── */
-  const Field = ({ id, label, type = 'text', placeholder, value, err }:
-    { id: keyof FormData; label: string; type?: string; placeholder: string; value: string; err?: string }) => (
-    <div className="flex flex-col gap-1">
-      <label className="text-[11px] font-mono tracking-widest text-slate-500 uppercase">{label} *</label>
-      <input
-        type={type}
-        value={value}
-        placeholder={placeholder}
-        onChange={(e) => update(id, e.target.value)}
-        onBlur={() => touch(id)}
-        className={`bg-[#0a1628] border rounded-lg px-4 py-2.5 text-sm text-slate-200 placeholder-slate-600
-          outline-none transition-all focus:ring-1 ${
-            touched[id] && err
-              ? 'border-red-500/60 focus:ring-red-500/40'
-              : 'border-[rgba(34,211,238,0.2)] focus:border-[#22d3ee] focus:ring-[#22d3ee]/20'
-          }`}
-      />
-      {touched[id] && err && (
-        <p className="text-xs text-red-400 mt-0.5">{err}</p>
-      )}
-    </div>
-  )
-
-  /* ── Chip selector ─────────────────────────────────────────── */
-  const Chip = ({ label, selected, onClick }: { label: string; selected: boolean; onClick: () => void }) => (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
-        selected
-          ? 'bg-[rgba(34,211,238,0.15)] border-[#22d3ee] text-[#22d3ee]'
-          : 'bg-[rgba(255,255,255,0.03)] border-[rgba(255,255,255,0.1)] text-slate-400 hover:border-[rgba(34,211,238,0.4)] hover:text-slate-200'
-      }`}
-    >
-      {label}
-    </button>
-  )
-
-  /* ── Progress bar ──────────────────────────────────────────── */
-  const Progress = ({ current }: { current: 1 | 2 | 3 }) => (
-    <div className="flex items-center gap-2 mb-5">
-      {[1, 2, 3].map((n) => (
-        <div key={n} className="flex items-center gap-2 flex-1">
-          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-all ${
-            n < current ? 'bg-gradient-to-br from-[#22d3ee] to-[#a855f7] text-white'
-            : n === current ? 'border-2 border-[#22d3ee] text-[#22d3ee]'
-            : 'border border-[rgba(255,255,255,0.1)] text-slate-600'
-          }`}>
-            {n < current ? '✓' : n}
-          </div>
-          {n < 3 && (
-            <div className={`h-0.5 flex-1 rounded-full transition-all ${n < current ? 'bg-gradient-to-r from-[#22d3ee] to-[#a855f7]' : 'bg-[rgba(255,255,255,0.08)]'}`} />
-          )}
-        </div>
-      ))}
-    </div>
-  )
-
-  /* ── Step label map ────────────────────────────────────────── */
-  const STEP_TITLES: Record<string, string> = {
-    '1': 'Your Details',
-    '2': 'Project Scope',
-    '3': 'Describe Your Vision',
   }
 
   return (
@@ -246,17 +271,32 @@ export default function ContactWidget() {
               <div className="px-6 py-5">
                 <AnimatePresence mode="wait">
 
-                  {/* ── STEP 1: Contact Info ─────────────── */}
+                  {/* ── STEP 1 ───────────────────────────── */}
                   {step === 1 && (
                     <motion.div key="s1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.22 }}>
                       <Progress current={1} />
                       <div className="flex flex-col gap-4">
-                        <Field id="name"  label="Full Name"     placeholder="Jane Smith"            value={form.name}  err={s1Errors.name} />
-                        <Field id="email" label="Email Address" placeholder="jane@company.com"       type="email" value={form.email} err={s1Errors.email} />
-                        <Field id="phone" label="Phone Number"  placeholder="+1 234 567 8900"        type="tel"   value={form.phone} err={s1Errors.phone} />
+                        <Field
+                          id="name" label="Full Name" placeholder="Muhammad Talha"
+                          value={form.name} err={s1Errors.name}
+                          isTouched={!!touched.name} onChange={update} onBlur={touch}
+                        />
+                        <Field
+                          id="email" label="Email Address" type="email" placeholder="you@company.com"
+                          value={form.email} err={s1Errors.email}
+                          isTouched={!!touched.email} onChange={update} onBlur={touch}
+                        />
+                        <Field
+                          id="phone" label="Phone Number" type="tel" placeholder="+92 300 0000000"
+                          value={form.phone} err={s1Errors.phone}
+                          isTouched={!!touched.phone} onChange={update} onBlur={touch}
+                        />
                       </div>
                       <button
-                        onClick={() => { Object.keys(s1Errors).forEach((k) => touch(k as keyof FormData)); if (step1Valid) setStep(2) }}
+                        onClick={() => {
+                          (['name', 'email', 'phone'] as (keyof FormData)[]).forEach(touch)
+                          if (step1Valid) setStep(2)
+                        }}
                         disabled={!step1Valid}
                         className="mt-6 w-full py-3 rounded-xl font-semibold text-sm transition-all
                           bg-gradient-to-r from-[#22d3ee] to-[#a855f7] text-white
@@ -268,12 +308,11 @@ export default function ContactWidget() {
                     </motion.div>
                   )}
 
-                  {/* ── STEP 2: Project Scope ────────────── */}
+                  {/* ── STEP 2 ───────────────────────────── */}
                   {step === 2 && (
                     <motion.div key="s2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.22 }}>
                       <Progress current={2} />
 
-                      {/* Services */}
                       <div className="mb-5">
                         <label className="text-[11px] font-mono tracking-widest text-slate-500 uppercase block mb-2">
                           I Need… <span className="text-slate-600">(select all that apply)</span>
@@ -293,7 +332,6 @@ export default function ContactWidget() {
                         )}
                       </div>
 
-                      {/* Budget */}
                       <div className="mb-5">
                         <label className="text-[11px] font-mono tracking-widest text-slate-500 uppercase block mb-2">
                           Budget Range *
@@ -305,7 +343,6 @@ export default function ContactWidget() {
                         </div>
                       </div>
 
-                      {/* Timeline */}
                       <div className="mb-6">
                         <label className="text-[11px] font-mono tracking-widest text-slate-500 uppercase block mb-2">
                           Timeline *
@@ -338,12 +375,12 @@ export default function ContactWidget() {
                     </motion.div>
                   )}
 
-                  {/* ── STEP 3: Description ──────────────── */}
+                  {/* ── STEP 3 ───────────────────────────── */}
                   {step === 3 && (
                     <motion.div key="s3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.22 }}>
                       <Progress current={3} />
 
-                      {/* Summary chips */}
+                      {/* Selection summary chips */}
                       <div className="flex flex-wrap gap-1.5 mb-5">
                         {form.services.map((id) => {
                           const s = SERVICES_OPTIONS.find((o) => o.id === id)
@@ -380,7 +417,9 @@ export default function ContactWidget() {
                         />
                         <div className="flex justify-between mt-1">
                           <p className={`text-xs ${form.description.trim().length < 20 ? 'text-slate-600' : 'text-emerald-500'}`}>
-                            {form.description.trim().length < 20 ? `${20 - form.description.trim().length} more characters needed` : '✓ Looks good'}
+                            {form.description.trim().length < 20
+                              ? `${20 - form.description.trim().length} more characters needed`
+                              : '✓ Looks good'}
                           </p>
                           <p className="text-xs text-slate-600">{form.description.length} chars</p>
                         </div>
@@ -442,8 +481,8 @@ export default function ContactWidget() {
                       </motion.div>
                       <h4 className="font-space font-bold text-xl text-white mb-2">You&apos;re all set!</h4>
                       <p className="text-slate-400 text-sm leading-relaxed mb-6">
-                        I&apos;ve received your request and will get back to you within <strong className="text-white">24 hours</strong>.
-                        Check your inbox for a confirmation.
+                        I&apos;ve received your request and will get back to you within{' '}
+                        <strong className="text-white">24 hours</strong>. Check your inbox for a confirmation.
                       </p>
                       <button
                         onClick={handleClose}

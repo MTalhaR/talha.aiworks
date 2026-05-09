@@ -39,12 +39,6 @@ export default function ContactSection() {
             >
               📅 Book a Discovery Call
             </button>
-            <a
-              href={`mailto:${OWNER.email}`}
-              className="btn-ghost px-10 py-4 text-base rounded-xl"
-            >
-              Send an Email
-            </a>
           </div>
 
           {/* Contact info row */}
