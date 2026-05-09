@@ -8,13 +8,13 @@ export const OWNER = {
   email: 'talha.aiworks@gmail.com',
   phone: '+92 334 0548100',
   location: 'Islamabad, Pakistan',
-  linkedin: 'https://linkedin.com/in/yourprofile',
-  Instagram: 'https://github.com/yourprofile',
+  // linkedin: 'https://linkedin.com/in/yourprofile',
+  // Instagram: 'https://github.com/yourprofile',
   /**
    * Paste your AI Voice Agent live-demo URL here when ready.
    * It will appear as a "Live Demo" button on the Projects section.
    */
-  voiceAgentUrl: '#', // ← replace with real URL
+  voiceAgentUrl: 'https://testyouragent.online/test/f803a68', // ← replace with real URL
   available: true,
 }
 
