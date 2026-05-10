@@ -14,7 +14,7 @@ export const OWNER = {
    * Paste your AI Voice Agent live-demo URL here when ready.
    * It will appear as a "Live Demo" button on the Projects section.
    */
-  voiceAgentUrl: 'https://testyouragent.online/test/f803a68', // ← replace with real URL
+  voiceAgentUrl: 'https://iefunnel.com/ai/767d1f7d', // ← replace with real URL
   available: true,
 }
 
