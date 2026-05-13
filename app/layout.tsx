@@ -46,7 +46,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${spaceGrotesk.variable} ${inter.variable} ${jetbrainsMono.variable}`}>
       <head>
-        <link rel="stylesheet" href="https://sidewidget.vercel.app/react-widget-uv.css" />
+        {/* <link rel="stylesheet" href="https://sidewidget.vercel.app/react-widget-uv.css" /> */}
       </head>
       <body>
         <ContactWidgetProvider>
@@ -54,10 +54,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <ContactWidget />
         </ContactWidgetProvider>
 
-        {/* ── Chatbot widget ─────────────────────────────────────────
-            Loads after the page is interactive so it never blocks render.
-            window.process polyfill is required by the widget bundle.
-        ─────────────────────────────────────────────────────────── */}
+        {/* ── Chatbot widget (temporarily disabled) ──────────────────
         <Script id="process-polyfill" strategy="beforeInteractive">
           {`window.process = { env: {} };`}
         </Script>
@@ -65,12 +62,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           src="https://sidewidget.vercel.app/react-widget-uv.iife.js"
           strategy="afterInteractive"
         />
-        {/* @ts-expect-error — custom web component not in React's JSX types */}
         <react-widget-uv
           agent_id="e836fb55-180a-4c95-8493-f2cb6b1f92f6"
           schema="db84d0ac-ea5e-45b9-b1c2-caeaf63b227a"
           type="thunderemotionlite"
         />
+        ─────────────────────────────────────────────────────────── */}
       </body>
     </html>
   )
