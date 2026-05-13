@@ -210,7 +210,7 @@ export default function ContactWidget() {
             exit={{ scale: 0, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 260, damping: 20 }}
             onClick={openWidget}
-            className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-5 py-3 rounded-2xl
+            className="fixed bottom-24 right-6 z-50 flex items-center gap-2 px-5 py-3 rounded-2xl
               bg-gradient-to-r from-[#22d3ee] to-[#a855f7] text-white font-semibold text-sm
               shadow-2xl shadow-[rgba(34,211,238,0.3)] hover:shadow-[rgba(34,211,238,0.5)]
               hover:scale-105 active:scale-95 transition-all relative widget-ring"

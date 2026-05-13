@@ -1,7 +1,7 @@
 // ─── Personal Info ─────────────────────────────────────────────────────────
 export const OWNER = {
-  name: 'Talha Riaz',
-  initials: 'TR',
+  name: 'TA Solutions',
+  initials: 'TA',
   title: 'AI Agent & Automation Architect',
   tagline:
     'I build AI systems that think, talk, and act — so your business scales without limits.',
