@@ -34,7 +34,7 @@ export default function Navbar() {
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
         {/* Logo */}
         <a href="#" className="flex items-center gap-2 group">
-          <span className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#22d3ee] to-[#a855f7] flex items-center justify-center text-white font-bold text-sm font-space select-none">
+          <span className="w-8 h-8 rounded-lg bg-[#2563eb] flex items-center justify-center text-white font-bold text-sm font-space select-none">
             {OWNER.initials}
           </span>
           <span className="font-space font-semibold text-white hidden sm:block">

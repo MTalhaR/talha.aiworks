@@ -18,7 +18,7 @@ export default function Footer() {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
           {/* Brand */}
           <div className="flex items-center gap-2">
-            <span className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#22d3ee] to-[#a855f7] flex items-center justify-center text-white font-bold text-xs font-space">
+            <span className="w-7 h-7 rounded-lg bg-[#2563eb] flex items-center justify-center text-white font-bold text-xs font-space">
               {OWNER.initials}
             </span>
             <span className="text-sm text-slate-400 font-mono">{OWNER.title}</span>
